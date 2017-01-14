@@ -150,6 +150,16 @@ var UserActions = function() {
           .send(resp);
     });
   };
+	 //David, gives user number for detox location info// 
+  self.userDetox = function(g, res, client, sender, action)
+  {
+    console.log("userDetox");
+    var body  = "call 410-433-5175 for 24 hour service.";
+    var resp  = '<Response><Message><Body>' + body + '</Body></Message></Response>';
+     res.status(200)
+    .contentType('text/xml')
+    .send(resp);
+  }
 
   //userReport will text the user's message to the admin phone number and will tell the user that it has been sent /
   self.userReport = function(g, res, client, sender, action)
