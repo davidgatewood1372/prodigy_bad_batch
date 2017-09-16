@@ -1,19 +1,17 @@
 var UserActions = function() 
 {
   var self = this;
-  var commands = ["van", "near", "join", "help", "map", "add", "leave", "!", "share", "info", "treatment", "naloxone"];
+  var commands = ["van","near","join","help","map", "add", "leave", "!", "share", "info"];
   var commandDescriptions = ["Tells you where the Baltimore Needle Exchange Van is at any time.",
    "Tells you where the nearest available medical care center is.", 
    "Registers you with the Bad Batch alert service.",
    "Shows you a list of commands you can send.",
    "Shows you the Region Map, which has numbers that correspond to areas in the city. You can then text the number of the area in which you live, which determines the kind of overdose alerts you will get.",
-   "Text 'add' followed by your region number to get alerts in multiple regions.",
-   "Removes you from the Bad Batch alert service. You can rejoin at any time by texting this number.",
+   "Text 'add' followed by your region number to get alerts in multiple regions",
+   "Removes you from the Bad Batch alert service. You can rejoin at any time by texting this number",
    "Text '!' followed by your message to anonymously send a message to someone who can help you.", 
    "Text 'share' followed by a friend's number to tell that friend about the Bad Batch Alert service.",
-   "Gives you some additional information about the service.",
-   "To get the 24 hour crisis number.",
-   "To get information about naloxone resources near you."];
+   "Gives you some additional information about the service"];
 
    var regionZips = [ 
    /* region 1  */    [21217, 21216],
@@ -45,7 +43,7 @@ var UserActions = function()
    self.userInfo = function(g, res, client, sender, action)
    {
       console.log("userInfo");
-      var body  = "Bad Batch Alert is an anonymous free text message service to help heroin users stay alive in Baltimore City.\n"
+      var body  = "Bad Batch Alert is an anonomys free text message service to help heroin users stay alive in Baltimore City.\n"
                 + "We use data from EMS and the Health Department to send alerts directly to you when a potentially lethal batch of tainted heroin is in your neighborhood.\n"
                 + "Find out more at BadBatchAlert.com";
       var media = "http://www.mike-legrand.com/BadBatchAlert/logoSmall150.png";
@@ -77,7 +75,7 @@ var UserActions = function()
     self.userResponse(res, body);
   };
   
-  self.userLeave = function(g, res, client, sender, action)
+  self.userLeave= function(g, res, client, sender, action)
   { 
     console.log("userLeave");
     var cryptoSender = g.cryptoHelper.encrypt(sender);
@@ -91,8 +89,8 @@ var UserActions = function()
     findQuery.on('error', function() {
       console.log('Error on userLeave');
     });
-    var body= "Thanks for using Bad Batch. Text 'join' to continue receiving updates.";
-    if(res) self.userResponse(res, body);
+    var body= "Thanks for using Bad Batch. Text 'join' to continue recieving updates.";
+    self.userResponse(res, body);
   };
   
   self.userMap = function(g, res, client, sender, action)
@@ -116,11 +114,9 @@ var UserActions = function()
       var insertQueryString = "UPDATE users SET regions = '" + region + "' WHERE phone_number = '" + cryptoSender + "'";
       var insertQuery = client.query(insertQueryString);
       insertQuery.on('end', function() {
-        if (!res) return;
         var body = "👍 You are all set to receive alerts in region " + region + ".\n\n" +
         "There are many other useful resources built into this service. To see all the commands text the word 'help'.";
-        var media = "http://www.badbatchalert.com/images/regions/region_" + region + ".jpg";
-        self.userResponse(res, body, media); 
+        self.userResponse(res, body); 
       });
     });
   };
@@ -135,7 +131,7 @@ var UserActions = function()
       isValidRegion = true;
     }
     if (isValidRegion === false) {
-      var body = "Sorry we didn't understand that. Text 'add' followed by a single region number to receive alerts in an additional region.";
+      var body = "Sorry we didn't understand that. Text 'add' followed by a single region number to receive alerts in an additional region";
       self.userResponse(res, body);
       return;
     }
@@ -165,7 +161,7 @@ var UserActions = function()
       }
       if (alreadyFound) {
         console.log('already found this region in your list');
-        var body = "👍 You are all set to receive alerts in these regions: " + regions;
+        var body = "👍 You are all set to receive alerts in these regions " + regions;
         var resp = '<Response><Message><Body>' + body + '</Body></Message></Response>';
         res.status(200)
         .contentType('text/xml')
@@ -174,13 +170,6 @@ var UserActions = function()
       }
 
       regionsArray.push(region);
-      if (regionsArray.length > 3) {
-        console.log ('Too many regions');
-        var body = "We're sorry, You can only register for 3 regions. To reset your regions just type the number for the region you wish to start with."
-        self.userResponse(res, body);
-        return;
-      }
-
       regions = regionsArray.length > 1 ?  regionsArray.join(', ') : regionsArray.join('');
       console.log ('regions after =' + regions);
       var insertQueryString = "UPDATE users SET regions = '" + regions + "' WHERE phone_number = '" + cryptoSender + "'";
@@ -209,7 +198,7 @@ var UserActions = function()
         var body = "👌 You're signed up as: " + name;
         self.userResponse(res, body);
       });
-    }); 
+    });
   };
 	
   self.userDetox = function(g, res, client, sender, action)
@@ -274,49 +263,42 @@ var UserActions = function()
       }
     }); 
 
-    var body  = "Your report has been sent. Please contact 911 if this is a medical emergency.";
+    var body  = "Your report has been sent. If this is an emergency, call 911 immediately.";
     self.userResponse(res, body);
   };
-	
-  self.userOd = function(g, res, client, sender, action) 
-  {
-    var report = "EMERGENCY";
+/*
+  //userOd will message the user on a critical question /
+  self.userOd = function(g, res, client, sender, action)
+  { 
+    var od = "Urgent alert!";
     var MY_NUMBER  = process.env.MY_NUMBER;
     var TWILIO_NUMBER = process.env.TWILIO_NUMBER;
     g.twilio.sendMessage({
       to: MY_NUMBER,
       from: TWILIO_NUMBER,
-      body: report
+      body: od 
     }, function (err) {
       if (err) {
         console.log(err);
       }
     }); 
 
-    var body  = "Thank you for your report we are taking action.";
+    var body  = "Thank you for your report, we are taking action.";
     self.userResponse(res, body);
-  };
-
-  self.userNaloxone = function(g, res, client, sender, action) 
-  {
-    console.log("userNaloxone");
-    var body  = "call 410-433-5175 for 24 hour service. The link to the training video http://bit.ly/2xGLkPA";
-    self.userResponse(res, body);
-  };
+  }; */
 
   //userShare will allow the user's message to share their experience to others/
   self.userShare = function(g, res, client, sender, action)
   { 
     var TWILIO_NUMBER = process.env.TWILIO_NUMBER;
-    var length = "share".length;
+    var length = "share".length + 1;
     var number = action.substring(length);
-    number = number.replace(/\s|-|\(|\)|\+/g, '');
+    
+    number = "+1" + number;
+    number = number.replace("-" , "");
+    number = number.replace("(" , "");
+    number = number.replace(")" , "");
 	  
-    if (!number.startsWith('1')) {
-      number = '1' + number;
-    }
-    number = "+" + number;
-     
     var body;
     var isValidNumber = true;
     if (number.length != '+10000000000'.length) {
@@ -340,7 +322,7 @@ var UserActions = function()
     self.userResponse(res, body);
   };
   
-  //userVan will show you where and when the needle exchange van will show up at certain times
+  //userNeedles will show you where and when the need fan will show up at certain times/
   self.userVan = function (g,res,client,sender,action)
   {
     console.log("userVan");
@@ -403,21 +385,28 @@ var UserActions = function()
     }
 
     //send message
-    if (res) {
-      self.userResponse(res, vanLocation +' Full schduele at http://bit.ly/2vN1GE6.');
-    }
-
-    return vanLocation;
+    var body = vanLocation;
+    self.userResponse(res, body);
 
   };
 
   self.userSetZipCode = function(g, res, client, sender, body) 
   {
     console.log("userSetZipCode");
-    var matchedRegionsArray = self.getRegionsFromZipCode(body);
+    var zipCode = parseInt(body);
+    var matchedRegionsArray = [];
+    for (var i = 0; i < regionZips.length; i++) {
+      var zips = regionZips[i];
+      for (var j = 0; j < zips.length; j++) {
+        var zip = zips[j];
+        if (zip == zipCode) {
+          matchedRegionsArray.push(i + 1);
+        }
+      }
+    }
     if (matchedRegionsArray.length === 0) {
       var errorText = "Sorry, this service is only available in the Baltimore metro area. If you'd like to have your area added to the Bad Batch Alert Serivce, send an email to badbatchalert@gmail.com.";
-      if (res) self.userResponse(res, errortext);
+      self.userResponse(res, errortext);
     }
     else {
       var regions = matchedRegionsArray.join(', '); 
@@ -436,22 +425,6 @@ var UserActions = function()
     if (body.length !== 5) return false;
     if (isNaN(body)) return false;
     return true;
-  };
-
-  self.getRegionsFromZipCode = function(body)
-  {
-    var zipCode = parseInt(body);
-    var matchedRegionsArray = [];
-    for (var i = 0; i < regionZips.length; i++) {
-      var zips = regionZips[i];
-      for (var j = 0; j < zips.length; j++) {
-        var zip = zips[j];
-        if (zip == zipCode) {
-          matchedRegionsArray.push(i + 1);
-        }
-      }
-    }
-    return matchedRegionsArray;
   };
 
  
@@ -478,18 +451,16 @@ var UserActions = function()
       self.userVan(g, res, client, sender, body);
     } else if (command == 'help') {
       self.userHelp(g, res, client, sender, body);
-    } else if (command == 'detox' || command == 'treatment') {
+    } else if (command == 'detox') {
       self.userDetox(g, res, client, sender, body);
     } else if (command.startsWith('share')) {
       self.userShare(g, res, client, sender, body);
     } else if (command.startsWith('info')) {
       self.userInfo(g, res, client, sender, body);
     } else if (command == 'join') {
-      self.userJoin(g, res, client, sender, body);   
+      self.userJoin(g, res, client, sender, body);/*
     } else if (command == 'od') {
-      self.userOd(g, res, client, sender, body);
-    } else if (command == 'naloxone') {
-      self.userNaloxone(g, res, client, sender, body);
+      self.userOd(g, res, client, sender, body); */   
     } else {
       self.userFail(g, res, client, sender, body);
     }
